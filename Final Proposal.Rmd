@@ -1,0 +1,38 @@
+---
+title: "Final Proposal"
+author: "Zijia Cao, Entong Li, Xindi Lu, Jingyu Xie"
+date: "11/12/2019"
+output: html_document
+---
+
+Group name: UNKNOWN
+Group member: Zijia Cao, Entong Li, Xindi Lu, Jingyu Xie
+
+The data set we use is for Google Play Store apps. For this project, we want to figure out which variables could predict the rating of Google Play Store apps. There are overall 10841 observations and 13 variables in this data set and rating is the response variable. Probably would not look at variable of App.
+
+Data cited from: https://www.kaggle.com/lava18/google-play-store-apps
+
+App: Application name
+Category: Category the app belongs to 
+Rating: Overall user rating of the apps
+Reviews: Number of user reviews for the app
+Size: Size of the app
+Installs: Number of user downloads/installs for the app
+Type: Paid or free
+Price: Price of the app
+Content Rating: Age group the app is targeted at
+Genres: An app can belong to multiple genres
+LastUpdated: Date when the app was last updated on Play Store
+Current Ver: Current version of the app available on Play Store
+Android Ver: Min required Android version
+
+
+Analysis:
+Summary of data
+Distribution of data
+Correlation between variables
+Graphs of how each predictor affects rating of apps
+Evaluation of the visualization
+
+
+
