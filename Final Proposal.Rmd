@@ -8,7 +8,7 @@ output: html_document
 Group name: UNKNOWN
 Group member: Zijia Cao, Entong Li, Xindi Lu, Jingyu Xie
 
-The data set we use is for Google Play Store apps. For this project, we want to figure out which variables could predict the rating of Google Play Store apps. There are overall 10841 observations and 13 variables in this data set and rating is the response variable. Probably would not look at variable of App.
+The data set we use is for Google Play Store apps. For this project, we want to figure out which variables could predict the rating of Google Play Store apps. There are overall 10841 observations and 13 variables in this data set and rating is the response variable. 
 
 Data cited from: https://www.kaggle.com/lava18/google-play-store-apps
 
@@ -27,12 +27,21 @@ Current Ver: Current version of the app available on Play Store
 Android Ver: Min required Android version
 
 
+Among all the variables above, the predictors our group will consider inclduing in our model:
+Category
+Size
+Installs
+Type
+Content Rating
+
+
 Analysis:
-Summary of data
-Distribution of data
-Correlation between variables
-Graphs of how each predictor affects rating of apps
-Evaluation of the visualization
+Step 1: Filter all NA values and values larger than 10 in the response variable "rating".
+Step 2: Summary of data
+Step 3: Make several distribution plots of predictors alone and relationship with response variable
+Step 4: Fit additive model and interactive model to decide whether we need an interaction between any two predictor variables
+Step 5: Finalize our model to predict app ratings
+Step 6: Evaluation of the visualization
 
 
 
