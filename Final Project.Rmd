@@ -1,0 +1,46 @@
+---
+title: "Final Project"
+author: "Entong Li, Jingyu Xie, Xindi Lu, Zijia Cao"
+date: "12/1/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, autodep = TRUE)
+library(tidyverse)
+library(MASS)
+library(broom)
+library(GGally)
+google <- read.csv("data/googleplaystore.csv", header = TRUE)
+google <- na.omit(google)
+google <- google[-c(11,12,13)] %>% filter(0<= Rating, 5>= Rating)
+```
+
+
+```{r}
+#Make Price as numeric variable:
+google$Price <- recode_factor(google$Price, `0` = "$0", `Everyone` = "$0")
+Price2 <- as.numeric(gsub("\\$","",google$Price))
+google$Price <- Price2
+```
+
+```{r}
+#recode the levels of Installs:
+google$Installs <- factor(google$Installs, levels = c("1+","5+","10+", "50+", "100+", "500+", "1,000+", "5,000+", "10,000+", "50,000+", "100,000+", "500,000+", "1,000,000+", "5,000,000+", "10,000,000+", "50,000,000+", "100,000,000+", "500,000,000+", "1,000,000,000+" ))
+```
+
+```{r}
+#Make Reviews as numeric variables:
+Reviews2 <- as.numeric(as.character(google$Reviews))
+google$Reviews <- Reviews2
+```
+
+```{r}
+#Divede Size into two groups: Mbs and kbs, and make the Size become a numeric variable:
+google <- google %>% filter(Size != "Varies with device", Size != "1,000+")
+google$Size <- as.character(google$Size)
+google$Size.M <- ifelse(grepl("M", google$Size), "M","k")
+Size1 <- as.numeric(gsub("[k|M]","",google$Size))
+google$Size <- Size1
+```
+
