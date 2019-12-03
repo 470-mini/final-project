@@ -48,7 +48,7 @@ google$Size <- Size1
 ```{r}
 google$Category <- as.character(google$Category)
 google.part <- google %>% filter(google$Category %in% c("FAMILY","GAME","TOOLS","HEALTH_AND_FITNESS","SPORTS","SOCIAL", "COMMUNICATION","DATING"), Price <= 10)
-google.part$Category <- recode(google.part$Category, "HEALTH_AND_FITNESS" = "FITNESS","SPORTS" = "FITNESS","SOCIAL" = "MEDIA", "COMMUNICATION" = "MEDIA","DATING" = "MEDIA")
+google.part$Category <- as.factor(recode(google.part$Category, "HEALTH_AND_FITNESS" = "FITNESS","SPORTS" = "FITNESS","SOCIAL" = "MEDIA", "COMMUNICATION" = "MEDIA","DATING" = "MEDIA"))
 ```
 
 ## Free vs Paid:
@@ -69,6 +69,27 @@ As the number of apps that size are counted by kbs is pretty small, we will incl
 ## Rating explanatory:
 
 ```{r}
-ggpairs(google.part[c(3,5,8)])
+ggpairs(google.part[c(2,3,5,8)])
+```
+
+### Rating and Free or Paid:
+
+```{r}
+ggplot(data = google.part, aes(x = Rating,..count.., fill = Type )) + geom_density(position = "fill") + labs(title = "Density of rating based on type")
+ggplot(data = google.part, aes(x = Rating,..count.., fill = Category )) + geom_density(position = "fill") + labs(fill = "Category") + labs(title = "Density of rating based on category")
+ggplot(data = google.part, aes(x = Rating, color = Category,fill = Category))+ geom_bar()
+```
+
+```{r}
+google.part <- google.part%>%filter(Size <= 100)
+ggplot(data = google.part, aes(x = Size, y = Rating, color = Category)) + geom_point() + geom_smooth(method = 'lm',se = FALSE,color = "black") + facet_wrap(~Category)
+```
+
+```{r}
+glm(weights = Reviews, Rating ~ Price + Size + Category, data = google.part)
+```
+
+```{r}
+rlm(Rating~Price + Size + Category, weights = Reviews, data = google.part, psi = psi.bisquare)
 ```
 
