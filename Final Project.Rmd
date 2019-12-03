@@ -93,3 +93,17 @@ glm(weights = Reviews, Rating ~ Price + Size + Category, data = google.part)
 rlm(Rating~Price + Size + Category, weights = Reviews, data = google.part, psi = psi.bisquare)
 ```
 
+
+```{r}
+# Content Rating and Rating
+ggplot(google.part, aes(Rating, fill = Content.Rating)) + geom_density() + facet_grid(Content.Rating ~ .) + scale_fill_manual(values = cb_palette)
+
+# category and rating
+#ggplot(google.part, aes(Rating, fill = Category)) + geom_density() + facet_grid(Category ~ .) + scale_fill_manual(values = cb_palette)
+ggplot(google.part, aes(Rating, ..count.., fill = Category)) + geom_density(position = "stack") + scale_fill_manual(values = cb_palette)
+
+# relationship between price and rating (Paid App)
+Paid <- google.part %>%
+  filter(Type == "Paid")
+ggplot(Paid, aes(Price, Rating, color = Category)) + geom_point() + geom_smooth() + scale_color_manual(values = cb_palette)
+```
