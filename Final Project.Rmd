@@ -22,6 +22,7 @@ google <- google[-c(11,12,13)] %>% filter(0<= Rating, 5>= Rating)
 google$Price <- recode_factor(google$Price, `0` = "$0", `Everyone` = "$0")
 Price2 <- as.numeric(gsub("\\$","",google$Price))
 google$Price <- Price2
+google$ForP <- ifelse(google$Price == 0, "Free","Paid")
 ```
 
 ```{r}
@@ -42,5 +43,32 @@ google$Size <- as.character(google$Size)
 google$Size.M <- ifelse(grepl("M", google$Size), "M","k")
 Size1 <- as.numeric(gsub("[k|M]","",google$Size))
 google$Size <- Size1
+```
+
+```{r}
+google$Category <- as.character(google$Category)
+google.part <- google %>% filter(google$Category %in% c("FAMILY","GAME","TOOLS","HEALTH_AND_FITNESS","SPORTS","SOCIAL", "COMMUNICATION","DATING"), Price <= 10)
+google.part$Category <- recode(google.part$Category, "HEALTH_AND_FITNESS" = "FITNESS","SPORTS" = "FITNESS","SOCIAL" = "MEDIA", "COMMUNICATION" = "MEDIA","DATING" = "MEDIA")
+```
+
+## Free vs Paid:
+
+```{r}
+ggplot(google.part, aes(x = ForP, group = Category, color = Category,fill = Category)) + geom_bar()
+```
+
+## Size: Mbs vs. Kbs:
+
+```{r}
+ggplot(data = google.part, aes(x = Size.M, group = Category, color = Category, fill = Category)) + geom_bar()
+google.part <- google.part %>% filter(google.part$Size.M == "M")
+```
+
+As the number of apps that size are counted by kbs is pretty small, we will include the apps that size are counted by Mbs. 
+
+## Rating explanatory:
+
+```{r}
+ggpairs(google.part[c(3,5,8)])
 ```
 
