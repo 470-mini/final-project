@@ -145,6 +145,15 @@ grid.arrange(type, category, ratingR, ncol = 3)
 ```
 
 ```{r}
+# weight by reviews
+weightR<- google.part %>%
+  group_by(Category, Price)%>%
+  summarise(Weight = weighted.mean(Rating, Reviews), Avg = mean(LifeExp))
 
+ggplot(weightR, aes(x =  Price, y = Weight, group = Category, color = Category)) + ylab("Weighted average rating") + labs(title = "Weighted average rating versus price of each category") + geom_line() + scale_color_manual(values = cb_palette)
+
+
+
+ggplot(google.part, aes(x = Price, y = Rating)) + geom_point(aes(size = Reviews)) + geom_smooth(aes(weight = Reviews), method = "loess", se = FALSE) + labs(title = "Weighted average rating versus price", size = "Reviews")
 ```
 
