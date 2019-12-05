@@ -169,8 +169,21 @@ grid.arrange(type, ratingR, ncol = 2)
 ```
 
 ```{r}
+<<<<<<< HEAD
 ggplot(data = google.part%>%filter(Type == "Paid"), aes( x = Price, y = Rating, color = Category, group = Category)) + geom_point() + geom_smooth(se = FALSE, method = "lm", color = "black") + facet_wrap(~Category) + xlab("Price ($)")
 ggplot(data = google.part%>%filter(Type == "Paid"), aes( x = Price, y = Rating)) + geom_point() + geom_smooth(method = "loess", se = FALSE)+ xlab("Price ($)")
+=======
+# weight by reviews
+weightR<- google.part %>%
+  group_by(Category, Price)%>%
+  summarise(Weight = weighted.mean(Rating, Reviews), Avg = mean(LifeExp))
+
+ggplot(weightR, aes(x =  Price, y = Weight, group = Category, color = Category)) + ylab("Weighted average rating") + labs(title = "Weighted average rating versus price of each category") + geom_line() + scale_color_manual(values = cb_palette)
+
+
+
+ggplot(google.part, aes(x = Price, y = Rating)) + geom_point(aes(size = Reviews)) + geom_smooth(aes(weight = Reviews), method = "loess", se = FALSE) + labs(title = "Weighted average rating versus price", size = "Reviews")
+>>>>>>> 2551edfdc93db564536b915f327950727c0d4ab2
 ```
 
 
