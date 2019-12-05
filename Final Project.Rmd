@@ -96,12 +96,6 @@ ggplot(data = google.part, aes(x = Size, y = Rating, color = Category)) + geom_p
 
 ```{r}
 google.part$indicator <- ifelse(google.part$Type == "Free", 0 , 1)
-glm(weights = Reviews, Rating ~ indicator + Price + Size + Category, data = google.part)
-glm(weights = Reviews, Rating ~ Price + Size + Category, data = google.part)
-```
-
-```{r}
-rlm(Rating~Price + Size + Category, weights = Reviews, data = google.part, psi = psi.bisquare)
 ```
 
 
@@ -169,10 +163,10 @@ grid.arrange(type, ratingR, ncol = 2)
 ```
 
 ```{r}
-<<<<<<< HEAD
+
 ggplot(data = google.part%>%filter(Type == "Paid"), aes( x = Price, y = Rating, color = Category, group = Category)) + geom_point() + geom_smooth(se = FALSE, method = "lm", color = "black") + facet_wrap(~Category) + xlab("Price ($)")
 ggplot(data = google.part%>%filter(Type == "Paid"), aes( x = Price, y = Rating)) + geom_point() + geom_smooth(method = "loess", se = FALSE)+ xlab("Price ($)")
-=======
+
 # weight by reviews
 weightR<- google.part %>%
   group_by(Category, Price)%>%
@@ -183,7 +177,74 @@ ggplot(weightR, aes(x =  Price, y = Weight, group = Category, color = Category))
 
 
 ggplot(google.part, aes(x = Price, y = Rating)) + geom_point(aes(size = Reviews)) + geom_smooth(aes(weight = Reviews), method = "loess", se = FALSE) + labs(title = "Weighted average rating versus price", size = "Reviews")
->>>>>>> 2551edfdc93db564536b915f327950727c0d4ab2
+
 ```
 
+```{r}
+#model
+a.0<- glm(Rating~indicator + Category + Size + Price,data=google.part,weights=Reviews)
+a.1 <- glm(Rating~indicator + Size + Price*Category,data=google.part,weights=Reviews)
+a.2 <- glm(Rating~indicator*Category + Size + Price,data=google.part,weights=Reviews)
+a.3 <- glm(Rating~indicator + Category * Size + Price,data=google.part,weights=Reviews)
+ 
+
+a.grid <- expand.grid(indicator = c(0,1), Category = factor(c("FAMILY","FITNESS","GAME","MEDIA","TOOLS")), Size = seq(1, 100, 1), Price = seq(0.99,10,1))
+
+a.0.pred <- predict(a.0, newdata = a.grid)
+a.0.pred.df <- data.frame(a.grid, fit = as.vector(a.0.pred), Type = ifelse(a.grid$indicator == 0, "Free","Paid"))
+
+ggplot(data = a.0.pred.df, aes(x = Price, y = fit))  + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating")
+
+ggplot(data = a.0.pred.df, aes(x = Size, y = fit)) + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating") + facet_wrap(~Type)
+
+# rt.p<-ggplot(Paid,aes(x =Size, y = Rating,group=Category,color=Category)) + 
+#   geom_smooth(method = "glm",se=FALSE)+ ggtitle("Paid")
+# 
+# free <- google.part %>%
+#   filter(Type == "Free")
+# rt.f<-ggplot(free,aes(x =Size, y = Rating,group=Category,color=Category)) + 
+#   geom_smooth(method = "glm",se=FALSE)+ ggtitle("Free")
+# 
+# grid.arrange(rt.f,rt.p, nrow = 1)
+
+```
+
+```{r}
+#Price*Category
+a.1.pred <- predict(a.1, newdata = a.grid)
+a.1.pred.df <- data.frame(a.grid, fit = as.vector(a.1.pred), Type = ifelse(a.grid$indicator == 0, "Free","Paid"))
+
+ggplot(data = a.1.pred.df, aes(x = Price, y = fit))  + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating")
+
+ggplot(data = a.1.pred.df, aes(x = Size, y = fit)) + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating") + facet_wrap(~Type)
+```
+
+```{r}
+#indicator*Category
+a.2.pred <- predict(a.2, newdata = a.grid)
+a.2.pred.df <- data.frame(a.grid, fit = as.vector(a.2.pred), Type = ifelse(a.grid$indicator == 0, "Free","Paid"))
+
+ggplot(data = a.2.pred.df, aes(x = Price, y = fit))  + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating")
+
+ggplot(data = a.2.pred.df, aes(x = Size, y = fit)) + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating") + facet_wrap(~Type)
+```
+
+```{r}
+a.3.pred <- predict(a.3, newdata = a.grid)
+a.3.pred.df <- data.frame(a.grid, fit = as.vector(a.3.pred), Type = ifelse(a.grid$indicator == 0, "Free","Paid"))
+
+ggplot(data = a.3.pred.df, aes(x = Price, y = fit))  + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating")
+
+ggplot(data = a.3.pred.df, aes(x = Size, y = fit)) + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating") + facet_wrap(~Type)
+```
+
+```{r}
+a.4 <- glm(Rating~indicator + Category * Size + Price*Category,data=google.part,weights=Reviews)
+a.4.pred <- predict(a.4, newdata = a.grid)
+a.4.pred.df <- data.frame(a.grid, fit = as.vector(a.4.pred), Type = ifelse(a.grid$indicator == 0, "Free","Paid"))
+
+ggplot(data = a.4.pred.df, aes(x = Price, y = fit))  + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating")
+
+ggplot(data = a.4.pred.df, aes(x = Size, y = fit)) + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating") + facet_wrap(~Type)
+```
 
