@@ -95,6 +95,8 @@ ggplot(data = google.part, aes(x = Size, y = Rating, color = Category)) + geom_p
 ```
 
 ```{r}
+google.part$indicator <- ifelse(google.part$Type == "Free", 0 , 1)
+glm(weights = Reviews, Rating ~ indicator + Price + Size + Category, data = google.part)
 glm(weights = Reviews, Rating ~ Price + Size + Category, data = google.part)
 ```
 
@@ -124,27 +126,51 @@ ggplot(data = google.part%>%filter(Type == "Paid"), aes(x = Rating, group = Cate
 ```
 
 ```{r}
-ggplot(data = google.part, aes( x = Rating.range, group = Type)) + geom_bar(show.legend = FALSE,aes(y = ..prop.., fill = factor(..x..)), stat = "count") + geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = "count") + facet_wrap(~Type) + labs(fill = "Rating range", title = "Percentage of different rating range within Free/Paid Apps") + cbp()+ ylab("Percentage")+scale_y_continuous(labels=scales::percent)
+ggplot(data = google.part, aes( x = Rating.range, group = Type, color = Type)) + geom_line(show.legend = FALSE,aes(y = ..prop..), stat = "count") + geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = "count") + labs(fill = "Rating range", title = "Percentage of different rating range") + cbp()+ ylab("Percentage")+scale_y_continuous(labels=scales::percent)
 
 ggplot(data = google.part%>%filter(Type == "Free"), aes( x = Rating.range, group = Category)) + geom_bar(show.legend = FALSE,aes(y = ..prop.., fill = factor(..x..)), stat = "count") + geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = "count") + facet_wrap(~Category) + labs(fill = "Rating range", title = "Percentage of different rating range within Category\n(For Free Apps)") + ylab("Percentage")+scale_y_continuous(labels=scales::percent) +cbp()
 
 ggplot(data = google.part%>%filter(Type == "Paid"), aes( x = Rating.range, group = Category)) + geom_bar(show.legend = FALSE,aes(y = ..prop.., fill = factor(..x..)), stat = "count") + geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = "count") + facet_wrap(~Category) + labs(fill = "Rating range", title = "Percentage of different rating range within Category\n(For Paid Apps)") + ylab("Percentage")+scale_y_continuous(labels=scales::percent) +cbp()
+
+ggplot(data = google.part, aes( x = Rating.range, group = Category)) + geom_line(show.legend = FALSE,aes(y = ..prop.., fill = factor(..x..)), stat = "count") + geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = "count") + facet_wrap(~Category) + labs(fill = "Rating range", title = "Percentage of different rating range within Category\n(For Paid Apps)") + ylab("Percentage")+scale_y_continuous(labels=scales::percent) +cbp()
 ```
+
+```{r}
+prop.of.free <- as.data.frame(matrix(c("FAMILY",0.6,2.8,27.4,69.2,"FITNESS",0.7,5.5,20.5,73.3,"GAME",0.2,0.8,19.3,79.7,"MEDIA",1.2,4.2,26.3,68.3, "TOOLS",1.9,6.3,32.3,59.5),dimnames = list(c(),c("Category","[1,2]","(2,3]","(3,4]","(4,5]")), ncol = 5, byrow = TRUE))
+
+prop.of.paid <- as.data.frame(matrix(c("FAMILY",1.5,3.8,11.4,83.3,"FITNESS",0,0,25.9,74.1,"GAME",0,0,18.1,81.9,"MEDIA",0,18.8,31.2,50.0,"TOOLS", 2.5,2.5,20.0,75.0),dimnames = list(c(),c("Category","[1,2]","(2,3]","(3,4]","(4,5]")), ncol = 5, byrow = TRUE))
+
+G1 <- gather(prop.of.free[c(2:5)], key = "range",value = "prop")
+g.cate <- rep(c("FAMILY","FITNESS","GAME","MEDIA","TOOLS"), 4)
+G1$category <- g.cate
+G1$type <- "Free"
+G2 <- gather(prop.of.paid[c(2:5)], key = "range",value = "prop")
+G2$type <- "Paid"
+G2$category <- g.cate
+G <- rbind(G1,G2)
+G$prop <- as.numeric(G$prop)
+G$range <- factor(G$range, levels = c("[1,2]","(2,3]", "(3,4]", "(4,5]"))
+ggplot(data = G, aes(x = range, y = prop, group = type, color = type)) + geom_line() + facet_wrap(~category) + ylab("Percentage (%)") + xlab("Rating Range") + labs(title = "Porportion of rating range")
+```
+
+
 
 ```{r, fig.width=8, fig.height=5}
 type <- ggplot(google.part, aes(Type, fill = Type)) + theme(axis.text.x = element_blank()) + 
           geom_bar(aes(y = (..count..)/sum(..count..)))  + ylab("Percentage") +
-          scale_y_continuous(labels=scales::percent) #+ geom_text(aes(label = percent((..count..)/sum(..count..)), y = (..count..)/sum(..count..)), stat = "count") + labs(title = "Percentage of Free/Paid Apps")
+          scale_y_continuous(labels=scales::percent) + geom_text(aes(label = percent((..count..)/sum(..count..)), y = (..count..)/sum(..count..)), stat = "count") + labs(title = "Percentage of Free/Paid Apps")
 
 category <- ggplot(google.part, aes(Category, fill = Category)) + theme(axis.text.x = element_blank()) +
           geom_bar(aes(y = (..count..)/sum(..count..)))  + ylab("Percentage") +
           scale_y_continuous(labels=scales::percent) #+geom_text(aes(label = percent((..count..)/sum(..count..)), y = (..count..)/sum(..count..)), stat = "count") + labs(title = "Percentage of Category")
 
-ratingR <- ggplot(google.part, aes(Rating.range, fill = Rating.range)) + theme(axis.text.x = element_blank()) +geom_bar(aes(y = (..count..)/sum(..count..))) + ylab("Percentage") + scale_y_continuous(labels=scales::percent) #+geom_text(aes(label = percent((..count..)/sum(..count..)), y = (..count..)/sum(..count..)), stat = "count") + labs(title = "Percentage of Rating range") 
-grid.arrange(type, category, ratingR, ncol = 3)
+ratingR <- ggplot(google.part, aes(Rating.range, fill = Rating.range)) + theme(axis.text.x = element_blank()) +geom_bar(aes(y = (..count..)/sum(..count..))) + ylab("Percentage") + scale_y_continuous(labels=scales::percent) +geom_text(aes(label = percent((..count..)/sum(..count..)), y = (..count..)/sum(..count..)), stat = "count") + labs(title = "Percentage of Rating range") 
+grid.arrange(type, ratingR, ncol = 2)
 ```
 
 ```{r}
-
+ggplot(data = google.part%>%filter(Type == "Paid"), aes( x = Price, y = Rating, color = Category, group = Category)) + geom_point() + geom_smooth(se = FALSE, method = "lm", color = "black") + facet_wrap(~Category) + xlab("Price ($)")
+ggplot(data = google.part%>%filter(Type == "Paid"), aes( x = Price, y = Rating)) + geom_point() + geom_smooth(method = "loess", se = FALSE)+ xlab("Price ($)")
 ```
+
 
