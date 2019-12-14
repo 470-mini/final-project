@@ -20,6 +20,23 @@ cb_palette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2"
 cbp <- function(x) scale_fill_manual(values = cb_palette)
 ```
 
+## Introduction
+
+
+
+## Research Question
+
+This project is mainly focus on: What kind of apps would always have higher rating as well as the prediction of app ratings.
+
+
+## Data Description
+
+This dataset initially collects the basic information of different apps from Google Play Store. The original dataset includes 9366 observations and 11 variables(includes one dependent variable Ratings). All the variables are: App, Category, Rating, Reviews, Size, Installs, Type, Price, Content Rating, Genres, Last Updated, Current Version and Android Version.
+
+This dataset is cited from: https://www.kaggle.com/lava18/google-play-store-apps.
+
+
+## Data Cleaning
 
 ```{r}
 #Make Price as numeric variable:
@@ -60,13 +77,27 @@ google.part$Category <- as.factor(recode(google.part$Category, "HEALTH_AND_FITNE
 google.part$Rating.range <- cut_interval(google.part$Rating, length = 1.0)
 ```
 
-## Free vs Paid:
+After data cleaning, the current total observations would be used in the following EDA and models are 4234. 
+
+Also, mainly focus on the following variables: 
+Category: Family, Game, Tools, Fitness, Media.
+Rating(Response variable): From 1.0 to 5.0.
+Price: From $0.0 to $10.0
+Type: Free or Paid.
+Size: 1.0M - 100M
+Reviews: From 1 to around 44 million.
+
+## EDA
+
+### Free vs Paid:
 
 ```{r}
-ggplot(google.part, aes(x = ForP, group = Category, color = Category,fill = Category)) + geom_bar()
+ggplot(google.part, aes(x = ForP, group = Category, color = Category,fill = Category)) + geom_bar() + xlab("Free or Paid")
 ```
 
-## Size: Mbs vs. Kbs:
+The ratio of free over paid is 3925:309, which is about 12.7 : 1. So it is hard to draw a solid conclusion about the influence of price on ratings.
+
+### Size: Mbs vs. Kbs:
 
 ```{r}
 ggplot(data = google.part, aes(x = Size.M, group = Category, color = Category, fill = Category)) + geom_bar()
@@ -75,11 +106,13 @@ google.part <- google.part %>% filter(google.part$Size.M == "M")
 
 As the number of apps that size are counted by kbs is pretty small, we will include the apps that size are counted by Mbs. 
 
-## Rating explanatory:
+### Rating explanatory:
 
 ```{r}
 ggpairs(google.part[c(2,3,5,8)])
 ```
+
+Rating is left-skewed and Size is right-skewed. Need to log Size in the following models.
 
 ### Rating and Free or Paid:
 
@@ -93,6 +126,8 @@ ggplot(data = google.part, aes(x = Rating, color = Category,fill = Category))+ g
 google.part <- google.part%>%filter(Size <= 100)
 ggplot(data = google.part, aes(x = Size, y = Rating, color = Category)) + geom_point() + geom_smooth(method = 'lm',se = FALSE,color = "black") + facet_wrap(~Category) + xlab("Size(MB)")
 ```
+
+The size only affects Tools apps significantly, larger tools apps have lower rating. While for other four kinds of apps, the increasing of size seem to increase the rating slightly. We will take a look how the size affect rating after we fitting the model. 
 
 ```{r}
 google.part$indicator <- ifelse(google.part$Type == "Free", 0 , 1)
@@ -121,7 +156,11 @@ ggplot(data = google.part%>%filter(Type == "Paid"), aes(x = Rating, group = Cate
 
 ```{r}
 ggplot(data = google.part, aes( x = Rating.range, group = Type, color = Type)) + geom_line(show.legend = FALSE,aes(y = ..prop..), stat = "count") + geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = "count") + labs(fill = "Rating range", title = "Percentage of different rating range") + cbp()+ ylab("Percentage")+scale_y_continuous(labels=scales::percent)
+```
 
+For paid apps, near 80% of them have rating higher than 4, but for free apps, only 70% of them have rating over 4. We could say that paid apps have higher probability to have rating higher than 4. However, this relation will be changed if we consider category.
+
+```{r}
 ggplot(data = google.part%>%filter(Type == "Free"), aes( x = Rating.range, group = Category)) + geom_bar(show.legend = FALSE,aes(y = ..prop.., fill = factor(..x..)), stat = "count") + geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = "count") + facet_wrap(~Category) + labs(fill = "Rating range", title = "Percentage of different rating range within Category\n(For Free Apps)") + ylab("Percentage")+scale_y_continuous(labels=scales::percent) +cbp()
 
 ggplot(data = google.part%>%filter(Type == "Paid"), aes( x = Rating.range, group = Category)) + geom_bar(show.legend = FALSE,aes(y = ..prop.., fill = factor(..x..)), stat = "count") + geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = "count") + facet_wrap(~Category) + labs(fill = "Rating range", title = "Percentage of different rating range within Category\n(For Paid Apps)") + ylab("Percentage")+scale_y_continuous(labels=scales::percent) +cbp()
@@ -147,7 +186,7 @@ G$range <- factor(G$range, levels = c("[1,2]","(2,3]", "(3,4]", "(4,5]"))
 ggplot(data = G, aes(x = range, y = prop, group = type, color = type)) + geom_line() + facet_wrap(~category) + ylab("Percentage (%)") + xlab("Rating Range") + labs(title = "Porportion of rating range")
 ```
 
-
+When we consider the category of apps,it's not always true that the paid apps have higher probability of having rating over 4.  For Media apps, free one have higher percentage of rating over 4, for game apps, the rating is not affected by the type of apps. So the interaction between category and type will be considered when we build the model.
 
 ```{r, fig.width=8, fig.height=5}
 type <- ggplot(google.part, aes(Type, fill = Type)) + theme(axis.text.x = element_blank()) + 
@@ -170,7 +209,7 @@ ggplot(data = google.part%>%filter(Type == "Paid"), aes( x = Price, y = Rating))
 # weight by reviews
 weightR<- google.part %>%
   group_by(Category, Price)%>%
-  summarise(Weight = weighted.mean(Rating, Reviews), Avg = mean(LifeExp))
+  summarise(Weight = weighted.mean(Rating, Reviews), Avg = mean(Rating))
 
 ggplot(weightR, aes(x =  Price, y = Weight, group = Category, color = Category)) + ylab("Weighted average rating") + labs(title = "Weighted average rating versus price of each category") + geom_line() + scale_color_manual(values = cb_palette)
 
@@ -179,6 +218,10 @@ ggplot(weightR, aes(x =  Price, y = Weight, group = Category, color = Category))
 ggplot(google.part, aes(x = Price, y = Rating)) + geom_point(aes(size = Reviews)) + geom_smooth(aes(weight = Reviews), method = "loess", se = FALSE) + labs(title = "Weighted average rating versus price", size = "Reviews")
 
 ```
+
+
+
+## Model
 
 ```{r}
 #model
