@@ -77,7 +77,9 @@ google.part$Category <- as.factor(recode(google.part$Category, "HEALTH_AND_FITNE
 google.part$Rating.range <- cut_interval(google.part$Rating, length = 1.0)
 ```
 
-After data cleaning, the current total observations would be used in the following EDA and models are 4234. 
+As only few of the apps have `Size` is counted by `kb`, which is around 200, so we decide to not include this kind of apps. Also, for the apps have `Size` larger than 100Mb, its size is too large and only few of them are in this dataset. Thus, we will also exclude the apps with `Size` larger than 100Mb. What's more, for the `Price` of the apps, there some extreme value, less than 180 of them have `Price` larger than `$10`, so we will include the apps with `Price` less than or equal to `$10` only. The `Category` of apps we mainly focus on the top five popular categories: Family, Game, Tools, Fitness, and Media.
+
+Overall, after data cleaning, the current total observations would be used in the following EDA and models are 4234. 
 
 Also, mainly focus on the following variables: 
 Category: Family, Game, Tools, Fitness, Media.
@@ -87,71 +89,46 @@ Type: Free or Paid.
 Size: 1.0M - 100M
 Reviews: From 1 to around 44 million.
 
-## EDA
+# EDA:
 
-### Free vs Paid:
+## Free vs Paid:
 
-```{r}
-ggplot(google.part, aes(x = ForP, group = Category, color = Category,fill = Category)) + geom_bar() + xlab("Free or Paid")
+```{r, fig.width=8, fig.height=5}
+type <- ggplot(google.part, aes(Type, fill = Type)) + theme(axis.text.x = element_blank()) + 
+          geom_bar(aes(y = (..count..)/sum(..count..)))  + ylab("Percentage") +
+          scale_y_continuous(labels=scales::percent) + geom_text(aes(label = percent((..count..)/sum(..count..)), y = (..count..)/sum(..count..)), stat = "count") + labs(title = "Percentage of Free/Paid Apps")
+
+category <- ggplot(google.part, aes(Category, fill = Category)) + theme(axis.text.x = element_blank()) +
+          geom_bar(aes(y = (..count..)/sum(..count..)))  + ylab("Percentage") +
+          scale_y_continuous(labels=scales::percent) #+geom_text(aes(label = percent((..count..)/sum(..count..)), y = (..count..)/sum(..count..)), stat = "count") + labs(title = "Percentage of Category")
+
+ratingR <- ggplot(google.part, aes(Rating.range, fill = Rating.range)) + theme(axis.text.x = element_blank()) +geom_bar(aes(y = (..count..)/sum(..count..))) + ylab("Percentage") + scale_y_continuous(labels=scales::percent) +geom_text(aes(label = percent((..count..)/sum(..count..)), y = (..count..)/sum(..count..)), stat = "count") + labs(title = "Percentage of Rating range") 
+
+type
 ```
 
 The ratio of free over paid is 3925:309, which is about 12.7 : 1. So it is hard to draw a solid conclusion about the influence of price on ratings.
 
-### Size: Mbs vs. Kbs:
+## Rating range distribution:
 
 ```{r}
-ggplot(data = google.part, aes(x = Size.M, group = Category, color = Category, fill = Category)) + geom_bar()
-google.part <- google.part %>% filter(google.part$Size.M == "M")
+ratingR
 ```
 
-As the number of apps that size are counted by kbs is pretty small, we will include the apps that size are counted by Mbs. 
+Most of the Apps have rating higher than 4, the distribution of Rating may be left-skewed, and when we build the model later, most of the predicted value of Rating may be in the range from 4 to 5, as over 50% of the rating is higher than 4.
 
-### Rating explanatory:
+## Rating explanatory:
 
 ```{r}
 ggpairs(google.part[c(2,3,5,8)])
 ```
 
-Rating is left-skewed and Size is right-skewed. Need to log Size in the following models.
+It's true that the Rating is left-skewed, Size and Price is right-skewed, but the Price is more etremely right-skewed. Thus, we wil need to log Size and log Price in the following models.
 
-### Rating and Free or Paid:
-
-```{r}
-ggplot(data = google.part, aes(x = Rating,..count.., fill = Type )) + geom_density(position = "fill") + labs(title = "Density of rating based on type")
-ggplot(data = google.part, aes(x = Rating,..count.., fill = Category )) + geom_density(position = "fill") + labs(fill = "Category") + labs(title = "Density of rating based on category")
-ggplot(data = google.part, aes(x = Rating, color = Category,fill = Category))+ geom_bar()
-```
-
-```{r}
-google.part <- google.part%>%filter(Size <= 100)
-ggplot(data = google.part, aes(x = Size, y = Rating, color = Category)) + geom_point() + geom_smooth(method = 'lm',se = FALSE,color = "black") + facet_wrap(~Category) + xlab("Size(MB)")
-```
-
-The size only affects Tools apps significantly, larger tools apps have lower rating. While for other four kinds of apps, the increasing of size seem to increase the rating slightly. We will take a look how the size affect rating after we fitting the model. 
+## Rating and Free or Paid:
 
 ```{r}
 google.part$indicator <- ifelse(google.part$Type == "Free", 0 , 1)
-```
-
-
-```{r}
-# Content Rating and Rating
-ggplot(google.part, aes(Rating, fill = Content.Rating)) + geom_density() + facet_grid(Content.Rating ~ .) + scale_fill_manual(values = cb_palette)
-
-# category and rating
-#ggplot(google.part, aes(Rating, fill = Category)) + geom_density() + facet_grid(Category ~ .) + scale_fill_manual(values = cb_palette)
-ggplot(google.part, aes(Rating, ..count.., fill = Category)) + geom_density(position = "stack") + scale_fill_manual(values = cb_palette)
-
-# relationship between price and rating (Paid App)
-Paid <- google.part %>%
-  filter(Type == "Paid")
-ggplot(Paid, aes(Price, Rating, color = Category)) + geom_point() + geom_smooth() + scale_color_manual(values = cb_palette)
-```
-
-
-```{r}
-ggplot(data = google.part%>%filter(Type == "Free"), aes(x = Rating, group = Category, color = Category, fill = Category)) + geom_density(position = "fill")
-ggplot(data = google.part%>%filter(Type == "Paid"), aes(x = Rating, group = Category, color = Category, fill = Category)) + geom_density(position = "fill")
 ```
 
 ```{r}
@@ -161,14 +138,11 @@ ggplot(data = google.part, aes( x = Rating.range, group = Type, color = Type)) +
 For paid apps, near 80% of them have rating higher than 4, but for free apps, only 70% of them have rating over 4. We could say that paid apps have higher probability to have rating higher than 4. However, this relation will be changed if we consider category.
 
 ```{r}
-ggplot(data = google.part%>%filter(Type == "Free"), aes( x = Rating.range, group = Category)) + geom_bar(show.legend = FALSE,aes(y = ..prop.., fill = factor(..x..)), stat = "count") + geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = "count") + facet_wrap(~Category) + labs(fill = "Rating range", title = "Percentage of different rating range within Category\n(For Free Apps)") + ylab("Percentage")+scale_y_continuous(labels=scales::percent) +cbp()
+a.1<-ggplot(data = google.part%>%filter(Type == "Free"), aes( x = Rating.range, group = Category)) + geom_bar(show.legend = FALSE,aes(y = ..prop.., fill = factor(..x..)), stat = "count") + geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = "count") + facet_wrap(~Category) + labs(fill = "Rating range", title = "Percentage of different rating range within Category\n(For Free Apps)") + ylab("Percentage")+scale_y_continuous(labels=scales::percent) +cbp()
 
-ggplot(data = google.part%>%filter(Type == "Paid"), aes( x = Rating.range, group = Category)) + geom_bar(show.legend = FALSE,aes(y = ..prop.., fill = factor(..x..)), stat = "count") + geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = "count") + facet_wrap(~Category) + labs(fill = "Rating range", title = "Percentage of different rating range within Category\n(For Paid Apps)") + ylab("Percentage")+scale_y_continuous(labels=scales::percent) +cbp()
+a.2<- ggplot(data = google.part%>%filter(Type == "Paid"), aes( x = Rating.range, group = Category)) + geom_bar(show.legend = FALSE,aes(y = ..prop.., fill = factor(..x..)), stat = "count") + geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = "count") + facet_wrap(~Category) + labs(fill = "Rating range", title = "Percentage of different rating range within Category\n(For Paid Apps)") + ylab("Percentage")+scale_y_continuous(labels=scales::percent) +cbp()
 
-ggplot(data = google.part, aes( x = Rating.range, group = Category)) + geom_line(show.legend = FALSE,aes(y = ..prop.., fill = factor(..x..)), stat = "count") + geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = "count") + facet_wrap(~Category) + labs(fill = "Rating range", title = "Percentage of different rating range within Category\n(For Paid Apps)") + ylab("Percentage")+scale_y_continuous(labels=scales::percent) +cbp()
-```
-
-```{r}
+#Input the percentage manually, number is given by the plot above (a.1, a.2):
 prop.of.free <- as.data.frame(matrix(c("FAMILY",0.6,2.8,27.4,69.2,"FITNESS",0.7,5.5,20.5,73.3,"GAME",0.2,0.8,19.3,79.7,"MEDIA",1.2,4.2,26.3,68.3, "TOOLS",1.9,6.3,32.3,59.5),dimnames = list(c(),c("Category","[1,2]","(2,3]","(3,4]","(4,5]")), ncol = 5, byrow = TRUE))
 
 prop.of.paid <- as.data.frame(matrix(c("FAMILY",1.5,3.8,11.4,83.3,"FITNESS",0,0,25.9,74.1,"GAME",0,0,18.1,81.9,"MEDIA",0,18.8,31.2,50.0,"TOOLS", 2.5,2.5,20.0,75.0),dimnames = list(c(),c("Category","[1,2]","(2,3]","(3,4]","(4,5]")), ncol = 5, byrow = TRUE))
@@ -188,38 +162,52 @@ ggplot(data = G, aes(x = range, y = prop, group = type, color = type)) + geom_li
 
 When we consider the category of apps,it's not always true that the paid apps have higher probability of having rating over 4.  For Media apps, free one have higher percentage of rating over 4, for game apps, the rating is not affected by the type of apps. So the interaction between category and type will be considered when we build the model.
 
-```{r, fig.width=8, fig.height=5}
-type <- ggplot(google.part, aes(Type, fill = Type)) + theme(axis.text.x = element_blank()) + 
-          geom_bar(aes(y = (..count..)/sum(..count..)))  + ylab("Percentage") +
-          scale_y_continuous(labels=scales::percent) + geom_text(aes(label = percent((..count..)/sum(..count..)), y = (..count..)/sum(..count..)), stat = "count") + labs(title = "Percentage of Free/Paid Apps")
 
-category <- ggplot(google.part, aes(Category, fill = Category)) + theme(axis.text.x = element_blank()) +
-          geom_bar(aes(y = (..count..)/sum(..count..)))  + ylab("Percentage") +
-          scale_y_continuous(labels=scales::percent) #+geom_text(aes(label = percent((..count..)/sum(..count..)), y = (..count..)/sum(..count..)), stat = "count") + labs(title = "Percentage of Category")
-
-ratingR <- ggplot(google.part, aes(Rating.range, fill = Rating.range)) + theme(axis.text.x = element_blank()) +geom_bar(aes(y = (..count..)/sum(..count..))) + ylab("Percentage") + scale_y_continuous(labels=scales::percent) +geom_text(aes(label = percent((..count..)/sum(..count..)), y = (..count..)/sum(..count..)), stat = "count") + labs(title = "Percentage of Rating range") 
-grid.arrange(type, ratingR, ncol = 2)
+## Rating and Size:
+```{r}
+google.part <- google.part%>%filter(Size <= 100)
+ggplot(data = google.part, aes(x = Size, y = Rating, color = Category)) + geom_point() + geom_smooth(method = 'lm',se = FALSE,color = "black") + facet_wrap(~Category) + xlab("Size(MB)")
 ```
+
+The size only affects Tools apps significantly, larger tools apps have lower rating. While for other four kinds of apps, the increasing of size seem to increase the rating slightly. We will take a look how the size affect rating after we fitting the model. 
+
+## Rating VS. Price:
+
+```{r}
+ggplot(data = google.part%>%filter(Type == "Paid"), aes( x = Price, y = Rating)) + geom_point() + geom_smooth(method = "loess", se = FALSE)+ xlab("Price ($)")
+```
+
+From the plot above, it seems that the price of apps does not have any relationship with the rating of apps, as the loess smoother looks almost flat. This is not what we expect to see, so in order to comfirt that whether Price has relation with Rating, we group the Price by apps' Category to see whether the relationship between Price and Rating will be different.
 
 ```{r}
 
 ggplot(data = google.part%>%filter(Type == "Paid"), aes( x = Price, y = Rating, color = Category, group = Category)) + geom_point() + geom_smooth(se = FALSE, method = "lm", color = "black") + facet_wrap(~Category) + xlab("Price ($)")
-ggplot(data = google.part%>%filter(Type == "Paid"), aes( x = Price, y = Rating)) + geom_point() + geom_smooth(method = "loess", se = FALSE)+ xlab("Price ($)")
+```
 
+It's clear that if we group the apps by their categories, the relationship between Price and Rating will be different based on their category. For Fitness, Media, and Tools apps, their price have negative relationship with Rating, higher price will have lower Rating for these three kinds of apps, especially for Media, and Tools apps, this negative relationship is stronger. However, for Family and Game, their Price have weak positive relationship with Rating, the increasing of Price will slightly increase the Rating of apps. Thus, we also need to include the category in the model if we want to include the Price, it will be not sufficient enought if we only include the Price in the model.
+
+## Weighted by Review or not:
+
+
+```{r}
 # weight by reviews
 weightR<- google.part %>%
   group_by(Category, Price)%>%
   summarise(Weight = weighted.mean(Rating, Reviews), Avg = mean(Rating))
 
-ggplot(weightR, aes(x =  Price, y = Weight, group = Category, color = Category)) + ylab("Weighted average rating") + labs(title = "Weighted average rating versus price of each category") + geom_line() + scale_color_manual(values = cb_palette)
+#ggplot(weightR, aes(x =  Price, y = Weight, group = Category, color = Category)) + ylab("Weighted average rating") + labs(title = "Weighted average rating versus price of each category") + geom_line() + scale_color_manual(values = cb_palette)
 
 
 
-ggplot(google.part, aes(x = Price, y = Rating)) + geom_point(aes(size = Reviews)) + geom_smooth(aes(weight = Reviews), method = "loess", se = FALSE) + labs(title = "Weighted average rating versus price", size = "Reviews")
+#ggplot(google.part, aes(x = Price, y = Rating)) + geom_point(aes(size = Reviews)) + geom_smooth(aes(weight = Reviews), method = "loess", se = FALSE) + labs(title = "Weighted average rating versus price", size = "Reviews")
 
 ```
 
+```{r}
+ggplot(data = google.part%>%filter(Type == "Paid"), aes( x = Price, y = Rating)) + geom_point() + geom_smooth(method = "lm", color = "blue",se = FALSE)+ xlab("Price ($)") + geom_smooth(aes(x = Price, y = Rating, weight = Reviews), se = FALSE, color = "red", method = "lm")
+```
 
+For the plot above, the red line is the weighted linear smoother, which is weighted by `Reviews`, while the blue line is not weighted. It's clear that the weighted (red) one will decrease as the price increase, while the blue one maintains same value although the price increases. `Reviews` weights will affect the relationship between `Price` and `Rating` of apps, so we will used the model weighted by `Reviews`.
 
 ## Model
 
