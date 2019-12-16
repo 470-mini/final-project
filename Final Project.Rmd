@@ -14,7 +14,10 @@ library(MASS)
 library(broom)
 library(scales)
 library(GGally)
+library(grid)
 library(gridExtra)
+library(rsq)
+library(kableExtra)
 google <- read.csv("data/googleplaystore.csv", header = TRUE)
 google <- na.omit(google)
 google <- google[-c(11,12,13)] %>% filter(0<= Rating, 5>= Rating)
@@ -224,6 +227,7 @@ There will be totally five models that we are going to build and compare. All of
 ## Null model: 
 
 ```{r}
+set.seed(1)
 #model
 a.0<- glm(Rating~indicator + Category + log.Size + Price,data=google.part,weights=Reviews)
 a.1 <- glm(Rating~indicator + log.Size + Price*Category,data=google.part,weights=Reviews)
@@ -236,11 +240,11 @@ a.grid <- expand.grid(indicator = c(0,1), Category = factor(c("FAMILY","FITNESS"
 a.0.pred <- predict(a.0, newdata = a.grid)
 a.0.pred.df <- data.frame(a.grid, fit = as.vector(a.0.pred), Type = ifelse(a.grid$indicator == 0, "Free","Paid")) 
 
-a.0.p<- ggplot(data = a.0.pred.df, aes(x = Price, y = fit))  + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating") + cbp()+ggtitle("Null Model (no interaction)")
+a.0.p<- ggplot(data = a.0.pred.df, aes(x = Price, y = fit))  + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) +  ylab("Predicted Rating") + cbp()+ggtitle("Predicted Rating\nVS. log of Price($)") + xlab("log of Price ($)")
 
-a.0.s<- ggplot(data = a.0.pred.df, aes(x = log.Size, y = fit)) + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating") + facet_wrap(~Type)+theme(legend.position = "none") + cbp()
+a.0.s<- ggplot(data = a.0.pred.df, aes(x = log.Size, y = fit)) + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating") + facet_wrap(~Type)+theme(legend.position = "none") +xlab("log of Size (Mb)")+ggtitle("Predicted Rating\nVS. log of Size(Mb)")
 
-grid.arrange(a.0.p, a.0.s,nrow = 1)
+grid.arrange(a.0.p, a.0.s,nrow = 1, top = textGrob("Null Model", gp=gpar(fontface="bold")))
 ```
 
 According to the Null Model, we could tell, while the higher the ` Price`  of an app (exclude free app) the lower the `Rating` will be. For the `Size`, it doesn't matter an app is free or not, As `Size` goes larger, the `Rating` goes higher.  
@@ -253,11 +257,11 @@ According to the Null Model, we could tell, while the higher the ` Price`  of an
 a.1.pred <- predict(a.1, newdata = a.grid)
 a.1.pred.df <- data.frame(a.grid, fit = as.vector(a.1.pred), Type = ifelse(a.grid$indicator == 0, "Free","Paid"))
 
-a.1.p<-ggplot(data = a.1.pred.df, aes(x = Price, y = fit))  + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating")+cbp()+ggtitle("Interaction Model 1 (interaction \n between log of Price and \n Category)")
+a.1.p<-ggplot(data = a.1.pred.df, aes(x = Price, y = fit))  + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating")+ggtitle("Predicted Rating\nVS. log of Price($)") + xlab("log of Price ($)")
 
-a.1.s<-ggplot(data = a.1.pred.df, aes(x = log.Size, y = fit)) + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating") + facet_wrap(~Type)+theme(legend.position = "none") +cbp()
+a.1.s<-ggplot(data = a.1.pred.df, aes(x = log.Size, y = fit)) + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating") + facet_wrap(~Type)+theme(legend.position = "none") +xlab("log of Size (Mb)")+ggtitle("Predicted Rating\nVS. log of Size(Mb)")
 
-grid.arrange(a.1.p, a.1.s, nrow = 1)
+grid.arrange(a.1.p, a.1.s, nrow = 1,top = textGrob("I1 Model", gp=gpar(fontface="bold")))
 
 ```
 
@@ -271,11 +275,11 @@ According to the Interaction model1, while the `Price` increasing the `Rating` s
 a.2.pred <- predict(a.2, newdata = a.grid)
 a.2.pred.df <- data.frame(a.grid, fit = as.vector(a.2.pred), Type = ifelse(a.grid$indicator == 0, "Free","Paid"))
 
-a.2.p<-ggplot(data = a.2.pred.df, aes(x = Price, y = fit))  + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating")+cbp()+ggtitle("Interaction Model 2 (interaction \n between Type and Category)")
+a.2.p<-ggplot(data = a.2.pred.df, aes(x = Price, y = fit))  + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating")+ggtitle("Predicted Rating\nVS. log of Price($)") + xlab("log of Price ($)")
 
-a.2.s<-ggplot(data = a.2.pred.df, aes(x = log.Size, y = fit)) + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating") + facet_wrap(~Type)+theme(legend.position = "none")+cbp()
+a.2.s<-ggplot(data = a.2.pred.df, aes(x = log.Size, y = fit)) + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating") + facet_wrap(~Type)+theme(legend.position = "none")+xlab("log of Size (Mb)")+ggtitle("Predicted Rating\nVS. log of Size(Mb)")
 
-grid.arrange(a.2.p, a.2.s, nrow = 1)
+grid.arrange(a.2.p, a.2.s, nrow = 1,top = textGrob("I2 Model", gp=gpar(fontface="bold")))
 
 ```
 
@@ -289,11 +293,11 @@ Compare Interaction model to with the Null model, we could see that there's no b
 a.3.pred <- predict(a.3, newdata = a.grid)
 a.3.pred.df <- data.frame(a.grid, fit = as.vector(a.3.pred), Type = ifelse(a.grid$indicator == 0, "Free","Paid"))
 
-a.3.p<-ggplot(data = a.3.pred.df, aes(x = Price, y = fit))  + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating")+cbp()+ggtitle("Interaction Model 3 (interaction \n between log of Size and \n Category)")
+a.3.p<-ggplot(data = a.3.pred.df, aes(x = Price, y = fit))  + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating")+ggtitle("Predicted Rating\nVS. log of Price($)") + xlab("log of Price ($)")
 
-a.3.s<-ggplot(data = a.3.pred.df, aes(x = log.Size, y = fit)) + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating") + facet_wrap(~Type)+theme(legend.position = "none")+cbp()
+a.3.s<-ggplot(data = a.3.pred.df, aes(x = log.Size, y = fit)) + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating") + facet_wrap(~Type)+theme(legend.position = "none")+xlab("log of Size (Mb)")+ggtitle("Predicted Rating\nVS. log of Size(Mb)")
 
-grid.arrange(a.3.p, a.3.s, nrow = 1)
+grid.arrange(a.3.p, a.3.s, nrow = 1,top = textGrob("I1 Model", gp=gpar(fontface="bold")))
 ```
 
 Compare Interaction model3 with the Null model, we could easily discover that, the slop changed for the model adding interaction. It is very obvious in the plot `log. Size-Rating` that slope of five `Categories` changed dramatically that some of them become sharper than before. And slopes of the plot `Price-Rating` changed as well, they become more flat. Anyway, the interaction between the log of Size and Category we also need to take into account. 
@@ -304,17 +308,49 @@ Compare Interaction model3 with the Null model, we could easily discover that, t
 a.4.pred <- predict(a.4, newdata = a.grid)
 a.4.pred.df <- data.frame(a.grid, fit = as.vector(a.4.pred), Type = ifelse(a.grid$indicator == 0, "Free","Paid"))
 
-a.4.p<-ggplot(data = a.4.pred.df, aes(x = Price, y = fit))  + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating")+cbp()+ggtitle("Interaction Model 4 (interaction \n  between log of Pirce and Category \n and between log of Size and \n Category.)")
+a.4.p<-ggplot(data = a.4.pred.df, aes(x = Price, y = fit))  + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F)  + ylab("Predicted Rating")+cbp()+ggtitle("Predicted Rating\nVS. log of Price($)") + xlab("log of Price ($)")
 
-a.4.s<-ggplot(data = a.4.pred.df, aes(x = log.Size, y = fit)) + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating") + facet_wrap(~Type)+theme(legend.position = "none")+cbp()
+a.4.s<-ggplot(data = a.4.pred.df, aes(x = log.Size, y = fit)) + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating") + facet_wrap(~Type)+theme(legend.position = "none")+xlab("log of Size (Mb)")+ggtitle("Predicted Rating\nVS. log of Size(Mb)")
 
-grid.arrange(a.4.p, a.4.s, nrow = 1)
 
-grid.arrange(a.0.p, a.0.s,nrow = 1)
+grid.arrange(a.0.p, a.0.s,nrow = 1,top = textGrob("I1 Model", gp=gpar(fontface="bold")))
 ```
 
 Compare Interaction model4 with Null model, we could find out that both plots' slopes changed so obviously which all slops becomes sharper that we need to take these two interactions model into account. 
 
+## Comparison:
 
+As the interaction in **I2 Model** is not sufficient, so we will not consider **I2 Model**. We will compare the `R-squared` from **Null Model**, **I1 Model**, **I3 Model**, and **I4 Model**, to see which one fits the data better. 
+
+```{r}
+Rsquare <- function(model){
+  R2 <- 1 - (model$deviance / model$null.deviance)
+  return(R2)
+}
+R2 <- matrix(c(Rsquare(a.0), Rsquare(a.1), Rsquare(a.3),Rsquare(a.4)), ncol = 4, dimnames = list(c("R-squared"), c("Null Model","I1 Model","I3 Model","I4 Model")))
+kable(R2, "latex", caption = "R-sqaured Comparison", booktabs = T) %>%
+  kable_styling(latex_options = "hold_position")
+```
+
+From the table above, **I4 Model** has the largest value of `R-squared`, so we decide to use **I4 Model** as the final model. 
+
+Then we take a look at how the Rating changes with log of Price from final model comparing to that from data. 
+
+```{r}
+raw <- ggplot(data = google.part%>%filter(Type == "Paid"), aes(x = log.Price, y = Rating))+geom_smooth(method = "lm", se = F, color = "blue")+ylim(4,5)+ggtitle("From Data")+ylab("Rating")+xlab("log of Price ($)")
+final <- ggplot(data = a.4.pred.df%>%filter(Type == "Paid"), aes(x = Price, y = fit))+ geom_smooth(method = "lm", se = F, color = "red")+ylim(4,5)+ggtitle("From Final Model")+ylab("Rating")+xlab("log of Price ($)")
+grid.arrange(raw, final, nrow = 1,top = textGrob("Rating VS. log of Price", gp=gpar(fontface="bold")))
+```
+
+By comparing with the relationship between log of Price and Rating from data and from final model, we could see that from data, the increasing of price will slightly increase the rating of apps, while from the final model, the increasing of price will decrease the rating of apps significantly.
+
+```{r}
+title1=textGrob("Rating VS. log of Size", gp=gpar(fontface="bold"))
+raw.s <- ggplot(data = google.part%>%filter(Type == "Paid"), aes(x = log.Size, y = Rating))+geom_smooth(method = "lm", se = F, color = "blue")+ylim(4,5)+ggtitle("From Data")+ylab("Rating")+xlab("log of Size (Mb)")
+final.s <- ggplot(data = a.4.pred.df%>%filter(Type == "Paid"), aes(x = log.Size, y = fit))+ geom_smooth(method = "lm", se = F, color = "red")+ylim(4,5)+ggtitle("From Final Model")+ylab("Rating")+xlab("log of Size (Mb)")
+grid.arrange(raw.s, final.s, nrow = 1, top = title1)
+```
+
+From the plot above, we could tell that from the final model, the relationship between `Size` and `Rating` is stronger than that from data. For the final model, the increasing of Size will increase obviously the Rating of apps, for the data the increasing of Size will decrease the Rating of apps weakly. 
 
 ##Conclusion
