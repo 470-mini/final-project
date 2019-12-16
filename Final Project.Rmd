@@ -3,12 +3,11 @@ title: "Final Project"
 author: "Entong Li, Jingyu Xie, Xindi Lu, Zijia Cao"
 date: "12/1/2019"
 output:
-  html_document:
-    df_print: paged
+  pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, autodep = TRUE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, autodep = TRUE,fig.width = 5, fig.height = 3)
 library(tidyverse)
 library(MASS)
 library(broom)
@@ -102,7 +101,7 @@ Reviews: From 1 to around 44 million.
 
 ## Free vs Paid:
 
-```{r, fig.width=8, fig.height=5}
+```{r}
 type <- ggplot(google.part, aes(Type, fill = Type)) + theme(axis.text.x = element_blank()) + 
           geom_bar(aes(y = (..count..)/sum(..count..)))  + ylab("Percentage") +
           scale_y_continuous(labels=scales::percent) + geom_text(aes(label = percent((..count..)/sum(..count..)), y = (..count..)/sum(..count..)), stat = "count") + labs(title = "Percentage of Free/Paid Apps")
@@ -222,11 +221,11 @@ For the plot above, the red line is the weighted linear smoother, which is weigh
 
 # Model building and analyses:
 
-There will be totally five models that we are going to build and compare. All of five models will use the same set of explanatory variables: log of Price, log of Size, Type, Category, and response variable Rating, and weighted by Reviews.The **Null Model** will be the only one model without any interaction. **I1 Model** will be the model with the interaction between log of Price and Category. **I2 Model** will be the model with the interaction between Type and Category. **I3 Model** will be the model with interaction between log of Size and Category. Lastly, **I4 Model** will be the model with two interactions: between log of Pirce and Category, and between log of Size and Category. 
+There will be totally five linear models that we are going to build and compare. All of five models will use the same set of explanatory variables: log of Price, log of Size, Type, Category, and response variable Rating, and weighted by Reviews.The **Null Model** will be the only one model without any interaction. **I1 Model** will be the model with the interaction between log of Price and Category. **I2 Model** will be the model with the interaction between Type and Category. **I3 Model** will be the model with interaction between log of Size and Category. Lastly, **I4 Model** will be the model with two interactions: between log of Pirce and Category, and between log of Size and Category. 
 
-## Null model: 
+## Model building: 
 
-```{r}
+```{r,fig.width = 6, fig.height = 4}
 set.seed(1)
 #model
 a.0<- glm(Rating~indicator + Category + log.Size + Price,data=google.part,weights=Reviews)
@@ -247,12 +246,7 @@ a.0.s<- ggplot(data = a.0.pred.df, aes(x = log.Size, y = fit)) + geom_smooth(aes
 grid.arrange(a.0.p, a.0.s,nrow = 1, top = textGrob("Null Model", gp=gpar(fontface="bold")))
 ```
 
-According to the Null Model, we could tell, while the higher the ` Price`  of an app (exclude free app) the lower the `Rating` will be. For the `Size`, it doesn't matter an app is free or not, As `Size` goes larger, the `Rating` goes higher.  
-
-
-## I1 Model:
-
-```{r}
+```{r,fig.width = 6, fig.height = 4}
 #Price*Category
 a.1.pred <- predict(a.1, newdata = a.grid)
 a.1.pred.df <- data.frame(a.grid, fit = as.vector(a.1.pred), Type = ifelse(a.grid$indicator == 0, "Free","Paid"))
@@ -262,15 +256,9 @@ a.1.p<-ggplot(data = a.1.pred.df, aes(x = Price, y = fit))  + geom_smooth(aes(gr
 a.1.s<-ggplot(data = a.1.pred.df, aes(x = log.Size, y = fit)) + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating") + facet_wrap(~Type)+theme(legend.position = "none") +xlab("log of Size (Mb)")+ggtitle("Predicted Rating\nVS. log of Size(Mb)")
 
 grid.arrange(a.1.p, a.1.s, nrow = 1,top = textGrob("I1 Model", gp=gpar(fontface="bold")))
-
 ```
 
-According to the Interaction model1, while the `Price` increasing the `Rating` still decreasing, however, for this model we use interation between log of `Price` and  `Category`, the slope of the `Price-Rating` plot changed dramatically that slopes become sharper compare to the Null model , but `log Size-Rating` stay similar, so the interaction between log of `Price` and  `Category` is significant. 
-
-
-## I2 Model:
-
-```{r}
+```{r,fig.width = 6, fig.height = 4}
 #indicator*Category
 a.2.pred <- predict(a.2, newdata = a.grid)
 a.2.pred.df <- data.frame(a.grid, fit = as.vector(a.2.pred), Type = ifelse(a.grid$indicator == 0, "Free","Paid"))
@@ -280,15 +268,9 @@ a.2.p<-ggplot(data = a.2.pred.df, aes(x = Price, y = fit))  + geom_smooth(aes(gr
 a.2.s<-ggplot(data = a.2.pred.df, aes(x = log.Size, y = fit)) + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating") + facet_wrap(~Type)+theme(legend.position = "none")+xlab("log of Size (Mb)")+ggtitle("Predicted Rating\nVS. log of Size(Mb)")
 
 grid.arrange(a.2.p, a.2.s, nrow = 1,top = textGrob("I2 Model", gp=gpar(fontface="bold")))
-
 ```
 
-Compare Interaction model to with the Null model, we could see that there's no big change of their slopes of both of the plots, the tendency for both plot for both models looks very similar to each other, so that the interaction between Type and Category does not need to take into account. 
-
-
-## I3 Model:
-
-```{r}
+```{r,fig.width = 6, fig.height = 4}
 #Size*Category:
 a.3.pred <- predict(a.3, newdata = a.grid)
 a.3.pred.df <- data.frame(a.grid, fit = as.vector(a.3.pred), Type = ifelse(a.grid$indicator == 0, "Free","Paid"))
@@ -297,14 +279,10 @@ a.3.p<-ggplot(data = a.3.pred.df, aes(x = Price, y = fit))  + geom_smooth(aes(gr
 
 a.3.s<-ggplot(data = a.3.pred.df, aes(x = log.Size, y = fit)) + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating") + facet_wrap(~Type)+theme(legend.position = "none")+xlab("log of Size (Mb)")+ggtitle("Predicted Rating\nVS. log of Size(Mb)")
 
-grid.arrange(a.3.p, a.3.s, nrow = 1,top = textGrob("I1 Model", gp=gpar(fontface="bold")))
+grid.arrange(a.3.p, a.3.s, nrow = 1,top = textGrob("I3 Model", gp=gpar(fontface="bold")))
 ```
 
-Compare Interaction model3 with the Null model, we could easily discover that, the slop changed for the model adding interaction. It is very obvious in the plot `log. Size-Rating` that slope of five `Categories` changed dramatically that some of them become sharper than before. And slopes of the plot `Price-Rating` changed as well, they become more flat. Anyway, the interaction between the log of Size and Category we also need to take into account. 
-
-## I4 Model:
-
-```{r}
+```{r,fig.width = 6, fig.height = 4}
 a.4.pred <- predict(a.4, newdata = a.grid)
 a.4.pred.df <- data.frame(a.grid, fit = as.vector(a.4.pred), Type = ifelse(a.grid$indicator == 0, "Free","Paid"))
 
@@ -313,10 +291,18 @@ a.4.p<-ggplot(data = a.4.pred.df, aes(x = Price, y = fit))  + geom_smooth(aes(gr
 a.4.s<-ggplot(data = a.4.pred.df, aes(x = log.Size, y = fit)) + geom_smooth(aes(group = Category, color = Category), method = "lm", se = F) + cbp() + ylab("Predicted Rating") + facet_wrap(~Type)+theme(legend.position = "none")+xlab("log of Size (Mb)")+ggtitle("Predicted Rating\nVS. log of Size(Mb)")
 
 
-grid.arrange(a.0.p, a.0.s,nrow = 1,top = textGrob("I1 Model", gp=gpar(fontface="bold")))
+grid.arrange(a.4.p, a.4.s,nrow = 1,top = textGrob("I4 Model", gp=gpar(fontface="bold")))
 ```
 
-Compare Interaction model4 with Null model, we could find out that both plots' slopes changed so obviously which all slops becomes sharper that we need to take these two interactions model into account. 
+For the **Null Model**,we could tell, while the higher the ` Price`  of an app (exclude free app) the lower the `Rating` will be. For the `Size`, it doesn't matter an app is free or not, As `Size` goes larger, the `Rating` goes higher. 
+
+For the **I1 Model**, while the `Price` increasing the `Rating` still decreasing, however, for this model we use interation between log of `Price` and  `Category`, the slope of the `Price-Rating` plot changed dramatically that slopes become sharper compare to the Null model , but `log Size-Rating` stay similar, so the interaction between log of `Price` and  `Category` is significant. 
+
+For the **I2 Model**, compare to with the Null model, we could see that there's no big change of their slopes of both of the plots, the tendency for both plot for both models looks very similar to each other, so that the interaction between Type and Category does not need to take into account. 
+
+For the **I3 Model**, compare with the Null model, we could easily discover that, the slop changed for the model adding interaction. It is very obvious in the plot `log. Size-Rating` that slope of five `Categories` changed dramatically that some of them become sharper than before. And slopes of the plot `Price-Rating` changed as well, they become more flat. Anyway, the interaction between the log of Size and Category we also need to take into account. 
+
+Lastly, for the **I4 Model**, compare to Null model, we could find out that both plots' slopes changed so obviously which all slops becomes sharper that we need to take these two interactions model into account. 
 
 ## Comparison:
 
