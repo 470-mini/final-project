@@ -132,7 +132,7 @@ Most of the Apps have rating higher than 4, the distribution of Rating is left-s
 ggpairs(google.part[c(2,3,5,8)])
 ```
 
-It's true that the Rating is left-skewed, Size and Price is right-skewed, but the Price is more etremely right-skewed. Thus, we wil need to log Size and log Price in the following models.
+It's true that the Rating is left-skewed, Size and Price is right-skewed, but the Price is more extremely right-skewed. Thus, we will need to log Size and log Price in the following models.
 
 ## Rating and Free or Paid:
 
