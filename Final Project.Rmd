@@ -26,15 +26,15 @@ cbp <- function(x) scale_fill_manual(values = cb_palette)
 
 ## Introduction
 
-It's quite common for people to evaluate effectiveness of Apps based on their ratings. Therefore, our group decide to analyze does any factors show traceable effect on ratings and what kind of factors indeed change ratings. We think the findings may help software developers to improve their applications in the future. This study aims to evaluate the Google Apps' ratings, and how does category, size, and price affect the final performance of ratings. After doing exploratory data analysis and building linear model, we finally conclude that Apps which have lower price and larger size are more likely to receive higher ratings on the Google Play store.
+It's quite common for people to evaluate the effectiveness of Apps based on their ratings. Therefore, our group decides to analyze does any factors show a traceable effect on ratings and what kind of factors indeed change ratings. We think the findings may help software developers to improve their applications in the future. This study aims to evaluate the Google Apps' ratings, and how do category, size, and price affect the final performance of ratings. After doing exploratory data analysis and building linear model, we finally conclude that Apps which have a lower price and larger size are more likely to receive higher ratings on the Google Play store.
 
 ## Research Question
 
-This project is mainly focus on: What kind of apps would always have higher rating as well as the prediction of app ratings.
+This project is mainly focused on: What kind of apps would always have a higher rating as well as the prediction of app ratings.
 
 ## Data Description
 
-This dataset initially collects the basic information of different apps from Google Play Store. The original dataset includes 9366 observations and 11 variables(includes one dependent variable Ratings). All the variables are: App, Category, Rating, Reviews, Size, Installs, Type, Price, Content Rating, Genres, Last Updated, Current Version and Android Version.
+This dataset initially collects the basic information of different apps from the Google Play Store. The original dataset includes 9366 observations and 11 variables(includes one dependent variable Ratings). All the variables are: App, Category, Rating, Reviews, Size, Installs, Type, Price, Content Rating, Genres, Last Updated, Current Version and Android Version.
 
 This dataset is cited from: https://www.kaggle.com/lava18/google-play-store-apps.
 
@@ -80,7 +80,7 @@ google.part$Category <- as.factor(recode(google.part$Category, "HEALTH_AND_FITNE
 google.part$Rating.range <- cut_interval(google.part$Rating, length = 1.0)
 ```
 
-As only few of the apps have `Size` is counted by `kb`, which is around 200, so we decide to not include this kind of apps. Also, for the apps have `Size` larger than 100Mb, its size is too large and only few of them are in this dataset. Thus, we will also exclude the apps with `Size` larger than 100Mb. What's more, for the `Price` of the apps, there some extreme value, less than 180 of them have `Price` larger than `$10`, so we will include the apps with `Price` less than or equal to `$10` only. The `Category` of apps we mainly focus on the top five popular categories: Family, Game, Tools, Fitness, and Media.
+As only a few of the apps have `Size` is counted by `kb`, which is around 200, so we decide to not include this kind of apps. Also, for the apps that have `Size` larger than 100Mb, its size is too large and only a few of them are in this dataset. Thus, we will also exclude the apps with `Size` larger than 100Mb. What's more, for the `Price` of the apps, there some extreme value, less than 180 of them have `Price` larger than `$10`, so we will include the apps with `Price` less than or equal to `$10` only. The `Category` of apps we mainly focus on the top five popular categories: Family, Game, Tools, Fitness, and Media.
 
 Overall, after data cleaning, the current total observations would be used in the following EDA and models are 4234. 
 
@@ -116,7 +116,7 @@ ratingR <- ggplot(google.part, aes(Rating.range, fill = Rating.range)) + theme(a
 type
 ```
 
-The ratio of free over paid is 3925:309, which is about 12.7 : 1. The size of `Paid` apps is very small comparing to the size of `Free` apps, so it is hard and may be insufficient to draw a solid conclusion about the influence of price on ratings, if we build the model to describe the relationship only between Price and Rating.
+The ratio of free over paid is 3925:309, which is about 12.7 : 1. The size of `Paid` apps is very small compared to the size of `Free` apps, so it is hard and maybe insufficient to draw a solid conclusion about the influence of price on ratings if we build the model to describe the relationship only between Price and Rating.
 
 ## Rating range distribution:
 
@@ -124,7 +124,7 @@ The ratio of free over paid is 3925:309, which is about 12.7 : 1. The size of `P
 ratingR
 ```
 
-Most of the Apps have rating higher than 4, the distribution of Rating is left-skewed, and when we build the model later, most of the predicted value of Rating may be in the range from 4 to 5, as over 50% of the rating is higher than 4. It may be more clearly to show how rating changes with explanantory variables if limit the rating in a range from 4 to 5. 
+Most of the Apps have rating higher than 4, the distribution of Rating is left-skewed, and when we build the model later, most of the predicted value of Rating may be in the range from 4 to 5, as over 50% of the rating is higher than 4. It may be more clearly to show how rating changes with explanatory variables if limit the rating in a range from 4 to 5. 
 
 ## Rating explanatory:
 
@@ -146,7 +146,7 @@ google.part$indicator <- ifelse(google.part$Type == "Free", 0 , 1)
 ggplot(data = google.part, aes( x = Rating.range, group = Type, color = Type)) + geom_line(show.legend = FALSE,aes(y = ..prop..), stat = "count") + geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = "count") + labs(fill = "Rating range", title = "Percentage of different rating range") + cbp()+ ylab("Percentage")+scale_y_continuous(labels=scales::percent)
 ```
 
-For paid apps, near 80% of them have rating higher than 4, but for free apps, only 70% of them have rating over 4. We could say that paid apps have higher probability to have rating higher than 4. However, this relation will be changed if we consider category.
+For paid apps, near 80% of them have a rating higher than 4, but for free apps, only 70% of them have a rating over 4. We could say that paid apps have a higher probability to have a rating higher than 4. However, this relation will be changed if we consider category.
 
 ```{r}
 a.1<-ggplot(data = google.part%>%filter(Type == "Free"), aes( x = Rating.range, group = Category)) + geom_bar(show.legend = FALSE,aes(y = ..prop.., fill = factor(..x..)), stat = "count") + geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = "count") + facet_wrap(~Category) + labs(fill = "Rating range", title = "Percentage of different rating range within Category\n(For Free Apps)") + ylab("Percentage")+scale_y_continuous(labels=scales::percent) +cbp()
@@ -171,7 +171,7 @@ G$range <- factor(G$range, levels = c("[1,2]","(2,3]", "(3,4]", "(4,5]"))
 ggplot(data = G, aes(x = range, y = prop, group = type, color = type)) + geom_line() + facet_wrap(~category) + ylab("Percentage (%)") + xlab("Rating Range") + labs(title = "Porportion of rating range")
 ```
 
-When we consider the category of apps,it's not always true that the paid apps have higher probability of having rating over 4.  For Media apps, free one have higher percentage of rating over 4, for game apps, the rating is not affected by the type of apps. So the interaction between category and type will be considered when we build the model.
+When we consider the category of apps, it's not always true that the paid apps have a higher probability of having a rating over 4.  For Media apps, free one has a higher percentage of rating over 4, for game apps, the rating is not affected by the type of apps. So the interaction between category and type will be considered when we build the model.
 
 
 ## Rating and Size:
@@ -180,7 +180,7 @@ google.part <- google.part%>%filter(Size <= 100)
 ggplot(data = google.part, aes(x = log.Size, y = Rating, color = Category)) + geom_point() + geom_smooth(method = 'lm',se = FALSE,color = "black") + facet_wrap(~Category) + xlab("log of Size(MB)")
 ```
 
-The size only affects Tools apps significantly, larger tools apps have lower rating. While for other four kinds of apps, the increasing of size seem to increase the rating slightly. We will take a look how the size affect rating after we fitting the model. 
+The size only affects Tools apps significantly, larger tools apps have a lower rating. While for the other four kinds of apps, the increasing of size seems to increase the rating slightly. We will take a look at how the size affects rating after we fitting the model. 
 
 ## Rating VS. Price:
 
@@ -188,14 +188,14 @@ The size only affects Tools apps significantly, larger tools apps have lower rat
 ggplot(data = google.part%>%filter(Type == "Paid"), aes( x = log.Price, y = Rating)) + geom_point() + geom_smooth(method = "loess", se = FALSE)+ xlab("log of Price ($)")
 ```
 
-From the plot above, it seems that the price of apps does not have any relationship with the rating of apps, as the loess smoother looks almost flat. This is not what we expect to see, so in order to comfirt that whether Price has relation with Rating, we group the Price by apps' Category to see whether the relationship between Price and Rating will be different.
+From the plot above, it seems that the price of apps does not have any relationship with the rating of apps, as the loess smoother looks almost flat. This is not what we expect to see, so in order to comfirm that whether Price has a relation with Rating, we group the Price by apps' Category to see whether the relationship between Price and Rating will be different.
 
 ```{r}
 
 ggplot(data = google.part%>%filter(Type == "Paid"), aes( x = log.Price, y = Rating, color = Category, group = Category)) + geom_point() + geom_smooth(se = FALSE, method = "lm", color = "black") + facet_wrap(~Category) + xlab("log of Price ($)")
 ```
 
-It's clear that if we group the apps by their categories, the relationship between Price and Rating will be different based on their category. For Fitness, and Tools apps, their price have negative relationship with Rating, higher price will have lower Rating for these three kinds of apps, especially for Fitness apps, this negative relationship is stronger. However, for Family and Game, their Price have weak positive relationship with Rating, the increasing of Price will slightly increase the Rating of apps. Only for Media apps, the relationship between Price and Rating is still weak or not existed. Thus, we also need to include the category in the model if we want to include the Price, it will be not sufficient enought if we only include the Price in the model.
+It's clear that if we group the apps by their categories, the relationship between Price and Rating will be different based on their category. For Fitness, and Tools apps, their price has a negative relationship with Rating, the higher price will have lower Rating for these three kinds of apps, especially for Fitness apps, this negative relationship is stronger. However, for Family and Game, their Price has a weak positive relationship with Rating, the increasing of Price will slightly increase the Rating of apps. Only for Media apps, the relationship between Price and Rating is still weak or not existed. Thus, we also need to include the category in the model if we want to include the Price, it will be not sufficient enough if we only include the Price in the model.
 
 ## Weighted by Review or not:
 
@@ -218,11 +218,11 @@ weightR<- google.part %>%
 ggplot(data = google.part%>%filter(Type == "Paid"), aes( x = log.Price, y = Rating)) + geom_point() + geom_smooth(method = "lm", color = "blue",se = FALSE)+ xlab("log of Price ($)") + geom_smooth(aes(x = log.Price, y = Rating, weight = Reviews), se = FALSE, color = "red", method = "lm")
 ```
 
-For the plot above, the red line is the weighted linear smoother, which is weighted by `Reviews`, while the blue line is not weighted. It's clear that the weighted (red) one will decrease as the price increase, while the blue one maintains same value although the price increases. `Reviews` weights will affect the relationship between `Price` and `Rating` of apps, so we will used the model weighted by `Reviews`.
+For the plot above, the red line is the weighted linear smoother, which is weighted by `Reviews`, while the blue line is not weighted. It's clear that the weighted (red) one will decrease as the price increase, while the blue one maintains the same value although the price increases. `Reviews` weights will affect the relationship between `Price` and `Rating` of apps, so we will use the model weighted by `Reviews`.
 
 # Model building and analyses:
 
-There will be totally five linear models that we are going to build and compare. All of five models will use the same set of explanatory variables: log of Price, log of Size, Type, Category, and response variable Rating, and weighted by Reviews.The **Null Model** will be the only one model without any interaction. **I1 Model** will be the model with the interaction between log of Price and Category. **I2 Model** will be the model with the interaction between Type and Category. **I3 Model** will be the model with interaction between log of Size and Category. Lastly, **I4 Model** will be the model with two interactions: between log of Pirce and Category, and between log of Size and Category. 
+There will be a totally five linear models that we are going to build and compare. All five models will use the same set of explanatory variables: log of Price, log of Size, Type, Category, and response variable Rating, and weighted by Reviews. The **Null Model** will be the only one model without any interaction. **I1 Model** will be the model with the interaction between the log of Price and Category. **I2 Model** will be the model with the interaction between Type and Category. **I3 Model** will be the model with interaction between the log of Size and Category. Lastly, **I4 Model** will be the model with two interactions: between the log of Pirce and Category, and between the log of Size and Category. 
 
 ## Model building: 
 
@@ -295,15 +295,15 @@ a.4.s<-ggplot(data = a.4.pred.df, aes(x = log.Size, y = fit)) + geom_smooth(aes(
 grid.arrange(a.4.p, a.4.s,nrow = 1,top = textGrob("I4 Model", gp=gpar(fontface="bold")))
 ```
 
-For the **Null Model**,we could tell, while the higher the ` Price`  of an app (exclude free app) the lower the `Rating` will be. For the `Size`, it doesn't matter an app is free or not, As `Size` goes larger, the `Rating` goes higher. 
+For the **Null Model**, we could tell, while the higher the ` Price`  of an app (exclude free app) the lower the `Rating` will be. For the `Size`, it doesn't matter an app is free or not, As `Size` goes larger, the `Rating` goes higher. 
 
-For the **I1 Model**, while the `Price` increasing the `Rating` still decreasing, however, for this model we use interation between log of `Price` and  `Category`, the slope of the `Price-Rating` plot changed dramatically that slopes become sharper compare to the Null model , but `log Size-Rating` stay similar, so the interaction between log of `Price` and  `Category` is significant. 
+For the **I1 Model**, while the `Price` increasing the `Rating` still decreasing, however, for this model we use interaction between log of `Price` and  `Category`, the slope of the `Price-Rating` plot changed dramatically that slopes become sharper compare to the Null model, but `log Size-Rating` stay similar, so the interaction between log of `Price` and  `Category` is significant. 
 
 For the **I2 Model**, compare to with the Null model, we could see that there's no big change of their slopes of both of the plots, the tendency for both plot for both models looks very similar to each other, so that the interaction between Type and Category does not need to take into account. 
 
-For the **I3 Model**, compare with the Null model, we could easily discover that, the slop changed for the model adding interaction. It is very obvious in the plot `log. Size-Rating` that slope of five `Categories` changed dramatically that some of them become sharper than before. And slopes of the plot `Price-Rating` changed as well, they become more flat. Anyway, the interaction between the log of Size and Category we also need to take into account. 
+For the **I3 Model**, compare with the Null model, we could easily discover that, the slop changed for the model adding interaction. It is very obvious in the plot `log. Size-Rating` that slope of five `Categories` changed dramatically that some of them become sharper than before. And slopes of the plot `Price-Rating` changed as well, they become flatter. Anyway, the interaction between the log of Size and Category we also need to take into account. 
 
-Lastly, for the **I4 Model**, compare to Null model, we could find out that both plots' slopes changed so obviously which all slops becomes sharper that we need to take these two interactions model into account. 
+Lastly, for the **I4 Model**, compare to the Null model, we could find out that both plots' slopes changed so obviously which all slops becomes sharper that we need to take these two interactions model into account. 
 
 ## Comparison:
 
@@ -321,7 +321,7 @@ kable(R2, "latex", caption = "R-sqaured Comparison", booktabs = T) %>%
 
 From the table `R-squared Comparison`, **I4 Model** has the largest value of `R-squared`, so we decide to use **I4 Model** as the final model. 
 
-Then we take a look at how the Rating changes with log of Price from final model comparing to that from data. 
+Then we take a look at how the Rating changes with the log of Price from the final model compared to that from data. 
 
 ```{r}
 raw <- ggplot(data = google.part%>%filter(Type == "Paid"), aes(x = log.Price, y = Rating))+geom_smooth(method = "lm", se = F, color = "blue")+ylim(4,5)+ggtitle("From Data")+ylab("Rating")+xlab("log of Price ($)")
@@ -329,7 +329,7 @@ final <- ggplot(data = a.4.pred.df%>%filter(Type == "Paid"), aes(x = Price, y = 
 grid.arrange(raw, final, nrow = 1,top = textGrob("Rating VS. log of Price", gp=gpar(fontface="bold")))
 ```
 
-By comparing with the relationship between log of Price and Rating from data and from final model, we could see that from data, the increasing of price will slightly increase the rating of apps, while from the final model, the increasing of price will decrease the rating of apps significantly.
+By comparing with the relationship between the log of Price and Rating from data and from the final model, we could see that from data, the increase of price will slightly increase the rating of apps, while from the final model, the increase of price will decrease the rating of apps significantly.
 
 ```{r}
 title1=textGrob("Rating VS. log of Size", gp=gpar(fontface="bold"))
