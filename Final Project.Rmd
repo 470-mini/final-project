@@ -26,16 +26,11 @@ cbp <- function(x) scale_fill_manual(values = cb_palette)
 
 ## Introduction
 
-
+It's quite common for people to evaluate effectiveness of Apps based on their ratings. Therefore, our group decide to analyze does any factors show traceable effect on ratings and what kind of factors indeed change ratings. We think the findings may help software developers to improve their applications in the future. This study aims to evaluate the Google Apps' ratings, and how does category, size, and price affect the final performance of ratings. After doing exploratory data analysis and building linear model, we finally conclude that Apps which have lower price and larger size are more likely to receive higher ratings on the Google Play store.
 
 ## Research Question
 
 This project is mainly focus on: What kind of apps would always have higher rating as well as the prediction of app ratings.
-
-
-## Executive Summary
-
-
 
 ## Data Description
 
