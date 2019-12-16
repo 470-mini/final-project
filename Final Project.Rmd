@@ -340,3 +340,7 @@ grid.arrange(raw.s, final.s, nrow = 1, top = title1)
 From the plot above, we could tell that from the final model, the relationship between `Size` and `Rating` is stronger than that from data. For the final model, the increasing of Size will increase obviously the Rating of apps, for the data the increasing of Size will decrease the Rating of apps weakly. 
 
 ##Conclusion
+
+Based on all the analysis and model selection, the **I4 Model** is the most precise one to answer our research question: what kind of apps would have higher ratings. And the answer is those with lower price as well as those with larger size are more likely to gain higher ratings. To predict the rating of apps in the google store, `Type`, `Price`, `Category` and `Size` are all crucial variables. We pick one null model and four alternative models which include interactions among variables in all. And the best model is the one with both the interaction between `Category` and `Size` and the interaction between `Price` and `Category`. Although `Category` is not as crucial as `Price`, it can not be elimintaed from the model. 
+Being different from our original observations or hypothesis that the relationship between rating and price is positive, the final model pulls the relationship between rating and price downwards. Although the slope does not change a lot in absolute values, it means a lot to the `Rating` since it has a small range.
+
