@@ -318,7 +318,7 @@ kable(R2, "latex", caption = "R-sqaured Comparison", booktabs = T) %>%
   kable_styling(latex_options = "hold_position")
 ```
 
-From the table above, **I4 Model** has the largest value of `R-squared`, so we decide to use **I4 Model** as the final model. 
+From the table `R-squared Comparison`, **I4 Model** has the largest value of `R-squared`, so we decide to use **I4 Model** as the final model. 
 
 Then we take a look at how the Rating changes with log of Price from final model comparing to that from data. 
 
