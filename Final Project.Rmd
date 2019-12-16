@@ -85,12 +85,18 @@ As only few of the apps have `Size` is counted by `kb`, which is around 200, so 
 Overall, after data cleaning, the current total observations would be used in the following EDA and models are 4234. 
 
 Also, mainly focus on the following variables: 
- + Category: Family, Game, Tools, Fitness, Media.
- + Rating(Response variable): From 1.0 to 5.0.
- + Price: From $0.0 to $10.0
- + Type: Free or Paid.
- + Size: 1.0M - 100M
- + Reviews: From 1 to around 44 million.
+ 
+1. Category: Family, Game, Tools, Fitness, Media.
+ 
+2. Rating(Response variable): From 1.0 to 5.0.
+ 
+3. Price: From $0.0 to $10.0
+ 
+4. Type: Free or Paid.
+ 
+5. Size: 1.0M - 100M
+ 
+6. Reviews: From 1 to around 44 million.
 
 # EDA:
 
